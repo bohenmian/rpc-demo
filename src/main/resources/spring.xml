@@ -17,4 +17,11 @@
     <bean id="serviceRegistry" class="cn.edu.swpu.zookeeper.ServiceRegistry">
         <constructor-arg name="registryAddress" value="${rpc.registry.address}"/>
     </bean>
+
+    <!-- 服务注册和服务发现的地址需要一样 -->
+    <bean id="serviceDiscovery" class="cn.edu.swpu.zookeeper.ServiceDiscovery">
+        <constructor-arg name="registryAddress" value="${rpc.registry.address}"/>
+    </bean>
+
+
 </beans>
