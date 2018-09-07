@@ -5,7 +5,7 @@ public class RpcRequest {
     private String requestId;
     private String className;
     private String methodName;
-    private Class<?> parameterTypes;
+    private Class<?>[] parameterTypes;
     private Object[] parameters;
 
     public String getRequestId() {
@@ -32,11 +32,11 @@ public class RpcRequest {
         this.methodName = methodName;
     }
 
-    public Class<?> getParameterTypes() {
+    public Class<?>[] getParameterTypes() {
         return parameterTypes;
     }
 
-    public void setParameterTypes(Class<?> parameterTypes) {
+    public void setParameterTypes(Class<?>[] parameterTypes) {
         this.parameterTypes = parameterTypes;
     }
 

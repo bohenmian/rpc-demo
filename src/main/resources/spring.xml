@@ -23,5 +23,11 @@
         <constructor-arg name="registryAddress" value="${rpc.registry.address}"/>
     </bean>
 
+    <bean id="rpcServer" class="cn.edu.swpu.server.RpcServer">
+        <constructor-arg name="serverAddress" value="${rpc.server.address}"/>
+        <constructor-arg name="serviceRegistry" ref="serviceRegistry"/>
+
+    </bean>
+
 
 </beans>
