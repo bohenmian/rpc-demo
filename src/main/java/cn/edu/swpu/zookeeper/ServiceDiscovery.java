@@ -57,17 +57,17 @@ public class ServiceDiscovery {
             });
             List<String> dataList = new ArrayList<>();
 
-            nodeList.stream().forEach(node -> {
+            nodeList.forEach(node -> {
                 try {
                     dataList.add(new String(zk.getData(ZookeeperConstant.ZK_REGISTRY_PATH + "/" + node, false, null)));
                 } catch (KeeperException | InterruptedException e) {
-                    e.printStackTrace();
+                    LOGGER.error(e.toString());
                 }
             });
             LOGGER.debug("node data: {}", dataList);
             this.dataList = dataList;
         } catch (InterruptedException | KeeperException e) {
-            e.printStackTrace();
+            LOGGER.error(e.toString());
         }
     }
 }
