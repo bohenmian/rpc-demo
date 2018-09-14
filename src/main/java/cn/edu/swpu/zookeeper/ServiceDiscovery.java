@@ -2,7 +2,6 @@ package cn.edu.swpu.zookeeper;
 
 import cn.edu.swpu.constant.ZookeeperConstant;
 import org.apache.zookeeper.KeeperException;
-import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooKeeper;
 import org.slf4j.Logger;
@@ -12,6 +11,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ThreadLocalRandom;
 
 // 从ZK上获取服务的地址
 public class ServiceDiscovery {
@@ -27,7 +27,7 @@ public class ServiceDiscovery {
     public ServiceDiscovery(String registryAddress) {
         this.registryAddress = registryAddress;
         ZooKeeper zk = connectServer();
-        if (zk == null) {
+        if (zk != null) {
             watchNode(zk);
         }
     }
@@ -69,5 +69,21 @@ public class ServiceDiscovery {
         } catch (InterruptedException | KeeperException e) {
             LOGGER.error(e.toString());
         }
+    }
+
+    public String discover() {
+        String data = null;
+        int size = dataList.size();
+        if (size > 0) {
+            if (size == 1) {//只有一个服务提供方
+                data = dataList.get(0);
+                LOGGER.info("unique service address : {}", data);
+            } else {
+                //使用随机分配法。简单的负载均衡法
+                data = dataList.get(ThreadLocalRandom.current().nextInt(size));
+                LOGGER.info("choose an address : {}", data);
+            }
+        }
+        return data;
     }
 }

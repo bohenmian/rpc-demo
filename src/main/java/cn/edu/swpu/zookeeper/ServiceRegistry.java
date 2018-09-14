@@ -2,7 +2,6 @@ package cn.edu.swpu.zookeeper;
 
 import cn.edu.swpu.constant.ZookeeperConstant;
 import org.apache.zookeeper.*;
-import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,13 +25,14 @@ public class ServiceRegistry {
         if (data != null) {
             ZooKeeper zk = connectServer();
             if (zk != null) {
-                AddRootNode(zk);
+//                AddRootNode(zk);
                 createNode(zk, data);
             }
         }
     }
 
     private ZooKeeper connectServer() {
+        LOGGER.info("start connect to zookeeper");
         ZooKeeper zk = null;
         try {
             zk = new ZooKeeper(registryAddress, ZookeeperConstant.ZK_SESSION_TIMEOUT, event -> {
@@ -47,25 +47,25 @@ public class ServiceRegistry {
         return zk;
     }
 
-    private void AddRootNode(ZooKeeper zk) {
-        try {
-            // 服务对应path这个节点不存在
-            Stat stat = zk.exists(ZookeeperConstant.ZK_REGISTRY_PATH, false);
-            if (stat == null) {
-                // 添加这个服务的节点
-                zk.create(ZookeeperConstant.ZK_REGISTRY_PATH, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
-            }
-        } catch (InterruptedException | KeeperException e) {
-            LOGGER.error("", e.toString());
-        }
-    }
+//    private void AddRootNode(ZooKeeper zk) {
+//        try {
+//            // 服务对应path这个节点不存在
+//            Stat stat = zk.exists(ZookeeperConstant.ZK_REGISTRY_PATH, false);
+//            if (stat == null) {
+//                // 添加这个服务的节点
+//                zk.create(ZookeeperConstant.ZK_REGISTRY_PATH, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+//            }
+//        } catch (InterruptedException | KeeperException e) {
+//            LOGGER.error("", e.toString());
+//        }
+//    }
 
     private void createNode(ZooKeeper zk, String data) {
         try {
             byte[] bytes = data.getBytes();
             String path = zk.create(ZookeeperConstant.ZK_DATA_PATH, bytes, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL_SEQUENTIAL);
             LOGGER.debug("create zookeeper node ({} => {})", path, data);
-        } catch (InterruptedException | KeeperException e) {
+        } catch (KeeperException | InterruptedException e) {
             LOGGER.error("", e);
         }
     }

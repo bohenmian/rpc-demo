@@ -8,9 +8,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 // 标记Rpc接口
-@Target(ElementType.TYPE)
+@Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-@Component
+@Component // 表明可被 Spring 扫描
 public @interface RpcService {
 
     Class<?> value();
