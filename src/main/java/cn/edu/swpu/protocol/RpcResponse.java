@@ -29,4 +29,8 @@ public class RpcResponse {
     public void setResult(Object result) {
         this.result = result;
     }
+
+    public boolean hasThrowable() {
+        return error != null;
+    }
 }

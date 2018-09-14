@@ -1,5 +1,6 @@
 package cn.edu.swpu.server;
 
+import cn.edu.swpu.annotation.RpcService;
 import cn.edu.swpu.protocol.RpcDecoder;
 import cn.edu.swpu.protocol.RpcEncoder;
 import cn.edu.swpu.protocol.RpcRequest;
@@ -13,7 +14,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
+import org.apache.commons.collections4.MapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -22,10 +23,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
 import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 public class RpcServer implements ApplicationContextAware, InitializingBean {
 
@@ -35,7 +33,6 @@ public class RpcServer implements ApplicationContextAware, InitializingBean {
     private ServiceRegistry serviceRegistry;
     // 存放接口名称和service之间的映射关系
     private Map<String, Object> handlerMap = new ConcurrentHashMap<>();
-    private static ThreadPoolExecutor threadPoolExecutor;
 
 
     public RpcServer(String serverAddress, ServiceRegistry serviceRegistry) {
@@ -57,7 +54,6 @@ public class RpcServer implements ApplicationContextAware, InitializingBean {
                         @Override
                         protected void initChannel(SocketChannel channel) throws Exception {
                             channel.pipeline()
-                                    .addLast(new LengthFieldBasedFrameDecoder(65536, 0, 4, 0, 0))
                                     .addLast(new RpcDecoder(RpcRequest.class))
                                     .addLast(new RpcEncoder(RpcResponse.class))
                                     .addLast(new RpcServerHandler(handlerMap));
@@ -85,17 +81,13 @@ public class RpcServer implements ApplicationContextAware, InitializingBean {
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-
-    }
-
-    public static void submit(Runnable task) {
-        if (threadPoolExecutor == null) {
-            synchronized (RpcServer.class) {
-                if (threadPoolExecutor == null) {
-                    threadPoolExecutor = new ThreadPoolExecutor(16, 20, 600L, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(65536));
-                }
+        // 没有扫描到注解RpcService
+        Map<String, Object> serviceBeanMap = applicationContext.getBeansWithAnnotation(RpcService.class);
+        if (MapUtils.isNotEmpty(serviceBeanMap)) {
+            for (Object serviceBean : serviceBeanMap.values()) {
+                String interfaceName = serviceBean.getClass().getAnnotation(RpcService.class).value().getName();
+                handlerMap.put(interfaceName, serviceBean);
             }
         }
-        threadPoolExecutor.submit(task);
     }
 }

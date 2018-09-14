@@ -10,14 +10,13 @@ import net.sf.cglib.reflect.FastMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 
 public class RpcServerHandler extends SimpleChannelInboundHandler<RpcRequest> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RpcServerHandler.class);
 
-    private final Map<String, Object> handlerMap;
+    private Map<String, Object> handlerMap;
 
     public RpcServerHandler(Map<String, Object> handlerMap) {
         this.handlerMap = handlerMap;
@@ -25,22 +24,18 @@ public class RpcServerHandler extends SimpleChannelInboundHandler<RpcRequest> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, RpcRequest rpcRequest) throws Exception {
-        RpcServer.submit(() -> {
-            LOGGER.debug("Receive request" + rpcRequest.getRequestId());
-            RpcResponse response = new RpcResponse();
-            response.setRequestId(rpcRequest.getRequestId());
-            try {
-                Object result = handle(rpcRequest);
-                response.setResult(result);
-            } catch (Throwable throwable) {
-                response.setError(throwable);
-                LOGGER.error("Rpc Server handle request error", throwable);
-            }
-            channelHandlerContext.writeAndFlush(response).addListener((ChannelFutureListener) channelFuture -> LOGGER.debug("Send response for request" + rpcRequest.getRequestId()));
-        });
+        RpcResponse response = new RpcResponse();
+        response.setRequestId(rpcRequest.getRequestId());
+        try {
+            Object result = handle(rpcRequest);
+            response.setResult(result);
+        } catch (Throwable throwable) {
+            response.setError(throwable);
+        }
+        channelHandlerContext.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
     }
 
-    private Object handle(RpcRequest rpcRequest) throws InvocationTargetException {
+    private Object handle(RpcRequest rpcRequest) throws Throwable {
         String className = rpcRequest.getClassName();
         Object serviceBean = handlerMap.get(className);
 
@@ -51,6 +46,11 @@ public class RpcServerHandler extends SimpleChannelInboundHandler<RpcRequest> {
 
         LOGGER.debug(serviceClass.getName());
         LOGGER.debug(methodName);
+
+//        JDK反射执行方法
+//        Method method = serviceClass.getMethod(methodName, parameterTypes);
+//        method.setAccessible(true);
+//        return method.invoke(serviceBean, parameters);
 
         FastClass serviceFastClass = FastClass.create(serviceClass);
         FastMethod serviceFastMethod = serviceFastClass.getMethod(methodName, parameterTypes);

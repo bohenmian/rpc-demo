@@ -1,5 +1,6 @@
 package cn.edu.swpu.service;
 
+
 import cn.edu.swpu.model.Person;
 
 public interface HelloService {
